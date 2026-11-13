@@ -17,17 +17,25 @@
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  #head { position: fixed; top: 14px; left: 14px; padding: 10px 14px; max-width: 260px; }
+  #head { position: fixed; top: 14px; left: 14px; padding: 10px 14px; max-width: 260px; z-index: 4; display: block; text-align: left; }
   #head h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: .01em; }
+  #head h1::after { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 0 3px 8px; border: solid var(--dim); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); transition: transform .2s; }
+  #head.open h1::after { transform: rotate(-135deg); margin-bottom: 0; }
   #head p { margin: 2px 0 0; color: var(--dim); font-size: 12px; }
+  #chips { display: none; flex-wrap: wrap; gap: 6px; margin: 9px 0 2px; }
+  #head.open #chips { display: flex; }
+  #chips span { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--dim); white-space: nowrap; }
+  #chips b { color: var(--ink); font-weight: 600; }
 
   #tools { position: fixed; top: 14px; right: 14px; display: flex; gap: 8px; align-items: center; }
   #variants { display: flex; padding: 3px; border-radius: 999px; }
   #variants button { padding: 6px 14px; border-radius: 999px; color: var(--dim); }
   #variants button[aria-pressed="true"] { background: var(--ink); color: #16181a; font-weight: 600; }
   .icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; }
+  .icon[aria-pressed="true"] { background: var(--accent); color: #16181a; border-color: transparent; }
   .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
+  body:not(.views-open) #views { display: none; }
   #views { position: fixed; left: 14px; top: 86px; bottom: 14px; width: 190px; padding: 8px; overflow-y: auto; scrollbar-width: thin; }
   #views button { display: flex; flex-direction: column; width: 100%; padding: 0; margin: 0 0 8px; border-radius: 8px; overflow: hidden;
     border: 1px solid transparent; text-align: left; background: rgba(255,255,255,.04); }
@@ -55,7 +63,15 @@
   #map.big .room { display: block; }
   #maphint { padding: 5px 4px 1px; font-size: 11px; color: var(--dim); text-align: center; }
 
-  #where { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 7px 16px; border-radius: 999px; font-weight: 600; pointer-events: none; }
+  /* view switcher: fixed-width pill, only the name changes */
+  #nav { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: 260px; height: 44px; padding: 0 4px 0 0; border-radius: 999px; display: flex; align-items: center; z-index: 2; }
+  #navname { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 16px; border-radius: 999px 0 0 999px; font-weight: 600; text-align: left; }
+  #navname i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  #where { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  body.views-open #where { text-decoration: underline dotted; text-underline-offset: 4px; }
+  #nav .arrow { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--dim); }
+  #nav .arrow:hover { color: var(--ink); background: rgba(255,255,255,.08); }
+  #nav .arrow svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   #load { position: fixed; inset: 0; display: grid; place-items: center; background: #111; z-index: 10; transition: opacity .5s; text-align: center; padding: 20px; color: var(--dim); }
   #load.hide { opacity: 0; pointer-events: none; }
   #busy { position: fixed; top: 50%; left: 50%; width: 34px; height: 34px; margin: -17px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25);
@@ -66,30 +82,41 @@
 
   /* phone / narrow layout: views become a strip along the bottom, map sits above it */
   @media (max-width: 760px) {
-    #head { top: 10px; left: 10px; padding: 8px 12px; max-width: calc(100vw - 190px); }
-    #head h1 { font-size: 14px; } #head p { display: none; }
+    #head { top: 10px; left: 10px; padding: 8px 12px; max-width: calc(100vw - 20px); }
+    #head:not(.open) { max-width: calc(100vw - 234px); }
+    #head h1 { font-size: 14px; } #head:not(.open) p { display: none; }
     #tools { top: 10px; right: 10px; gap: 6px; }
-    #variants button { padding: 6px 11px; }
-    #views { left: 10px; right: 10px; top: auto; bottom: calc(10px + env(safe-area-inset-bottom)); width: auto; display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; }
+    #variants button { padding: 6px 10px; }
+    #views { left: 10px; right: 124px; top: auto; bottom: calc(62px + env(safe-area-inset-bottom)); width: auto; display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; z-index: 2; }
     #views button { flex: 0 0 112px; margin: 0; }
     #views span { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 5px 7px; }
-    #map { right: 10px; bottom: calc(128px + env(safe-area-inset-bottom)); width: 104px; padding: 4px; }
+    #map { right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); width: 104px; padding: 4px; z-index: 3; }
     #maphint { display: none; }
-    #where { display: none; }
+    #nav { left: 10px; transform: none; bottom: calc(10px + env(safe-area-inset-bottom)); width: min(250px, calc(100vw - 134px)); }
+    /* small plan on a phone: view dots are markers only, the whole plan is one tap target that enlarges it */
+    #map:not(.big) .dot { pointer-events: none; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-width: 1px; }
+    #map:not(.big) .dot[aria-current="true"] { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; }
+    #map:not(.big) #cone::before { left: -13px; top: -24px; width: 26px; height: 24px; }
   }
 </style>
 </head>
 <body>
 <div id="stage"></div>
-<div id="head" class="panel"><h1 id="title">3D Walkthrough</h1><p id="sub"></p></div>
+<button id="head" class="panel" aria-expanded="false" aria-controls="chips"><h1 id="title">3D Walkthrough</h1><p id="sub"></p><div id="chips"></div></button>
 <div id="tools">
   <div id="variants" class="panel" role="group" aria-label="Lighting"></div>
+  <button id="gyro" class="panel icon" aria-pressed="false" aria-label="Move phone to look around" title="Move phone to look around" hidden>
+    <svg viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8M1.5 10.5v3M22.5 10.5v3"/></svg></button>
   <button id="fs" class="panel icon" aria-label="Full screen" title="Full screen">
     <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 </div>
 <nav id="views" class="panel" aria-label="Views"></nav>
 <div id="map" class="panel"><div id="mapin"><img src="map.jpg" alt="Floor plan"><div id="cone"></div></div><div id="maphint">Tap plan to enlarge</div></div>
-<div id="where" class="panel"></div>
+<div id="nav" class="panel">
+  <button id="navname" aria-label="Show or hide the list of views" aria-expanded="false" aria-controls="views"><i></i><span id="where"></span></button>
+  <button id="prev" class="arrow" aria-label="Previous view"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button id="next" class="arrow" aria-label="Next view"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+</div>
 <div id="busy"></div>
 <div id="load">Loading walkthrough…</div>
 
@@ -180,7 +207,7 @@ async function go(id, v = variant, keepView = false) {
   const next = makeCube(texs);
   if (cube) { next.children.forEach(m => m.material.opacity = 0); next.renderOrder = 1; fading = { g: next, old: cube, t0: performance.now() }; }
   scene.add(next); cube = next;
-  if (!keepView && (!current || current.id !== id)) { yaw = n.yaw * Math.PI / 180; pitch = -0.06; }
+  if (!keepView && (!current || current.id !== id)) { yaw = n.yaw * Math.PI / 180; pitch = -0.06; gyro.first = true; }
   current = n; variant = v; buildSpots(n); syncUI();
   n.links.forEach(l => loadPano(v, l).catch(() => {}));           // warm the neighbours
 }
@@ -196,14 +223,15 @@ function syncUI() {
 }
 
 // ---------- UI
+const narrow = matchMedia('(max-width: 760px)');
 const M = tour.map, mapPos = ([x, y]) => [(x - M.x0) / (M.x1 - M.x0) * 100, (M.y1 - y) / (M.y1 - M.y0) * 100];
 for (const n of tour.nodes) {
   const b = document.createElement('button'); b.dataset.id = n.id;
   b.innerHTML = `<img src="thumb/${n.id}.jpg" alt="" loading="lazy"><span></span>`; b.querySelector('span').textContent = n.name;
-  b.onclick = () => go(n.id); $('#views').appendChild(b);
+  b.onclick = () => { go(n.id); if (narrow.matches) setViews(false); }; $('#views').appendChild(b);
   const d = document.createElement('button'); d.className = 'dot'; d.dataset.id = n.id; d.title = n.name; d.setAttribute('aria-label', n.name);
   const [l, t] = mapPos(n.pos); d.style.left = l + '%'; d.style.top = t + '%';
-  d.onclick = e => { e.stopPropagation(); go(n.id); }; $('#mapin').appendChild(d);
+  d.onclick = e => { e.stopPropagation(); go(n.id); if (narrow.matches) setBig(false); }; $('#mapin').appendChild(d);
 }
 for (const r of tour.rooms || []) {
   const d = document.createElement('div'); d.className = 'room'; const [l, t] = mapPos([r.x, r.y]); d.style.left = l + '%'; d.style.top = t + '%';
@@ -211,7 +239,23 @@ for (const r of tour.rooms || []) {
   if (r.area) d.appendChild(document.createTextNode(r.area.toFixed(1) + ' m²'));
   $('#mapin').appendChild(d);
 }
-$('#mapin').onclick = () => { const big = $('#map').classList.toggle('big'); $('#maphint').textContent = big ? 'Room areas shown · tap to shrink' : 'Tap plan to enlarge'; };
+function setBig(big) { $('#map').classList.toggle('big', big); $('#maphint').textContent = big ? 'Room areas shown · tap to shrink' : 'Tap plan to enlarge'; }
+$('#mapin').onclick = () => setBig(!$('#map').classList.contains('big'));
+
+// title: tap to show / hide the details
+for (const r of tour.rooms || []) if (r.area) {
+  const c = document.createElement('span'), b = document.createElement('b'); b.textContent = r.area.toFixed(1) + ' m²';
+  c.append((r.note || r.name) + ' ', b); $('#chips').appendChild(c);
+}
+$('#head').onclick = () => $('#head').setAttribute('aria-expanded', $('#head').classList.toggle('open'));
+
+// view switcher: arrows step through the views, the name opens / closes the list (closed by default on a phone)
+function setViews(open) { document.body.classList.toggle('views-open', open); $('#navname').setAttribute('aria-expanded', open);
+  if (open && current) document.querySelector(`#views button[data-id="${current.id}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+setViews(!narrow.matches);
+$('#navname').onclick = () => setViews(!document.body.classList.contains('views-open'));
+const step = d => { const i = tour.nodes.indexOf(current); go(tour.nodes[(i + d + tour.nodes.length) % tour.nodes.length].id); };
+$('#prev').onclick = () => step(-1); $('#next').onclick = () => step(1);
 if (tour.variants.length > 1) for (const v of tour.variants) {
   const b = document.createElement('button'); b.dataset.id = v.id; b.textContent = v.name; b.onclick = () => go(current.id, v.id, true); $('#variants').appendChild(b);
 } else $('#variants').style.display = 'none';
@@ -220,12 +264,35 @@ if (!(fsEl.requestFullscreen || fsEl.webkitRequestFullscreen)) $('#fs').style.di
 $('#fs').onclick = () => { const d = document; if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
   else (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl); };
 
+// ---------- move the phone to look around (device orientation)
+const gyro = { on: false, off: 0, first: true, q: new THREE.Quaternion(), e: new THREE.Euler(), f: new THREE.Vector3(),
+  q1: new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2), q0: new THREE.Quaternion(), z: new THREE.Vector3(0, 0, 1) };
+function onOrient(ev) {
+  if (!gyro.on || ev.alpha == null || ev.beta == null) return;
+  const D = Math.PI / 180, so = (screen.orientation?.angle ?? window.orientation ?? 0) * D;
+  gyro.e.set(ev.beta * D, ev.alpha * D, -ev.gamma * D, 'YXZ');
+  gyro.q.setFromEuler(gyro.e).multiply(gyro.q1).multiply(gyro.q0.setFromAxisAngle(gyro.z, -so));
+  const f = gyro.f.set(0, 0, -1).applyQuaternion(gyro.q);              // where the back of the phone points (y up)
+  const head = Math.atan2(-f.x, -f.z);
+  if (gyro.first) { gyro.off = yaw - head; gyro.first = false; }       // keep facing the same way when switching on
+  yaw = head + gyro.off; pitch = Math.max(-1.45, Math.min(1.45, Math.asin(Math.max(-1, Math.min(1, f.y)))));
+}
+async function setGyro(on) {
+  if (on && typeof DeviceOrientationEvent?.requestPermission === 'function') {      // iOS asks the user first
+    try { if (await DeviceOrientationEvent.requestPermission() !== 'granted') on = false; } catch (e) { on = false; }
+  }
+  gyro.on = on; gyro.first = true; $('#gyro').setAttribute('aria-pressed', on);
+  (on ? addEventListener : removeEventListener)('deviceorientation', onOrient);
+}
+if ('DeviceOrientationEvent' in window && (navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) $('#gyro').hidden = false;
+$('#gyro').onclick = () => setGyro(!gyro.on);
+
 // ---------- look around: drag, pinch / wheel zoom, keyboard
 const ptr = new Map(); let moved = 0, pinch = 0;
 stage.addEventListener('pointerdown', e => { stage.setPointerCapture(e.pointerId); ptr.set(e.pointerId, e); moved = 0; stage.classList.add('drag'); });
 stage.addEventListener('pointermove', e => {
   const p = ptr.get(e.pointerId); if (!p) return;
-  if (ptr.size === 1) { const k = fov / innerHeight * Math.PI / 180; yaw += (e.clientX - p.clientX) * k; pitch += (e.clientY - p.clientY) * k; moved += Math.abs(e.clientX - p.clientX) + Math.abs(e.clientY - p.clientY); }
+  if (ptr.size === 1) { const k = fov / innerHeight * Math.PI / 180; yaw += (e.clientX - p.clientX) * k; gyro.off += (e.clientX - p.clientX) * k; if (!gyro.on) pitch += (e.clientY - p.clientY) * k; moved += Math.abs(e.clientX - p.clientX) + Math.abs(e.clientY - p.clientY); }
   ptr.set(e.pointerId, e);
   if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); if (pinch) fov *= pinch / d; pinch = d; moved = 99; }
   pitch = Math.max(-1.45, Math.min(1.45, pitch)); fov = Math.max(38, Math.min(95, fov));
@@ -257,7 +324,7 @@ function frame(now) {
 const [hid, hvar] = location.hash.slice(1).split('/');
 go(nodes[hid] ? hid : tour.nodes[0].id, tour.variants.some(v => v.id === hvar) ? hvar : variant);
 requestAnimationFrame(frame);
-window.__tour = { go, nodes, get state() { return { id: current?.id, variant, yaw, pitch }; }, look(y, p) { yaw = y; pitch = p; } };
+window.__tour = { go, nodes, get state() { return { id: current?.id, variant, yaw, pitch }; }, look(y, p) { yaw = y; pitch = p; }, gyro: setGyro };
 </script>
 </body>
 </html>
