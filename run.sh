@@ -6,6 +6,15 @@ cd "$(dirname "$0")"
 BLENDER="${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}"
 command -v "$BLENDER" >/dev/null 2>&1 || BLENDER=blender
 
+# Only one run at a time: two renders at once can exhaust memory and crash the Mac.
+LOCK=build/.run.lock
+mkdir -p build
+if ! mkdir "$LOCK" 2>/dev/null; then
+  echo "Another run.sh is already running (or crashed). If nothing is rendering, delete $LOCK and retry."
+  exit 1
+fi
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+
 "$BLENDER" -b -P src/build.py
 "$BLENDER" -b -P src/fitout.py
 "$BLENDER" -b -P src/render.py -- --mode top
