@@ -92,14 +92,15 @@ def blob(n, c, r, mat="leaf", scale=(1, 1, 1), strength=0.35):
     return ob
 
 
-def plant(n, x, y, z=0.0, h=1.3, pot_r=0.2, pot_h=0.42):
+def plant(n, x, y, z=0.0, h=1.3, pot_r=0.2, pot_h=0.42, s=1.0):
+    """s scales the foliage (1.0 = full floor plant)."""
     cy(n + ".pot", (x, y), pot_r, z, z + pot_h, "pot", r2=pot_r * 1.15)
     cy(n + ".soil", (x, y), pot_r * 1.05, z + pot_h - 0.03, z + pot_h - 0.02, "soil")
     cy(n + ".stem", (x, y), 0.015, z + pot_h, z + h * 0.7, "trunk", seg=8)
     for i in range(5):
         a = i * 2.4
-        blob(f"{n}.leaf{i}", (x + math.cos(a) * 0.14, y + math.sin(a) * 0.14, z + h * (0.6 + 0.08 * i)),
-             0.2 + 0.03 * (i % 3), "leaf" if i % 2 else "leaf2", scale=(1, 1, 1.2))
+        blob(f"{n}.leaf{i}", (x + math.cos(a) * 0.14 * s, y + math.sin(a) * 0.14 * s, z + h * (0.6 + 0.08 * i)),
+             (0.2 + 0.03 * (i % 3)) * s, "leaf" if i % 2 else "leaf2", scale=(1, 1, 1.2))
 
 
 def tree(n, x, y, h=5.0, r=1.6):
@@ -170,7 +171,6 @@ bx("tv", (8.22, 2.15, 0.75), (8.26, 3.55, 1.55), "screen", 0.004)
 bx("tv.back", (8.26, 2.5, 0.9), (8.31, 3.2, 1.4), "black")
 cy("vase", (8.02, 2.0), 0.07, 0.5, 0.78, "ceramic", r2=0.04)
 bx("console.books", (7.86, 3.5, 0.5), (8.12, 3.72, 0.58), "book", 0.004)
-plant("plant_living", 3.45, 0.62, h=1.7, pot_r=0.22)
 # art on the wall between the two slider sets and on the east wall
 bx("art_n", (7.75, 5.66, 1.0), (8.42, 5.69, 1.9), "art1"); bx("art_n.frame", (7.72, 5.685, 0.97), (8.45, 5.70, 1.93), "black")
 # floor lamp beside sofa B
@@ -211,12 +211,21 @@ for i, sx in enumerate((9.85, 10.685, 11.52)):
         beam(f"stool{i}.leg{q}", (sx + math.cos(a) * 0.11, 2.86 + math.sin(a) * 0.11, 0.63),
              (sx + math.cos(a) * 0.19, 2.86 + math.sin(a) * 0.19, 0), 0.02, 0.02, M["black"], F)
     cy(f"stool{i}.ring", (sx, 2.86), 0.165, 0.22, 0.235, "black")
-# back run: tall fridge / pantry block, then base units with sink under the window
-bx("tall.body", (8.81, 0.2, 0.1), (9.55, 0.8, 2.4), "oak")
-bx("tall.kick", (8.81, 0.2, 0), (9.55, 0.77, 0.1), "black")
-bx("tall.gap", (9.178, 0.8, 0.1), (9.182, 0.802, 2.4), "black")
-bx("tall.fill", (8.81, 0.2, 2.4), (9.55, 0.8, H), "paint")
-bx("tall.h1", (9.12, 0.80, 0.9), (9.14, 0.83, 1.5), "black"); bx("tall.h2", (9.22, 0.80, 0.9), (9.24, 0.83, 1.5), "black")
+# back run: stainless fridge in an oak housing with a cupboard over, then base units with sink under the window
+FX0, FX1 = 8.63, 9.55
+bx("tall.sideW", (FX0, 0.2, 0), (FX0 + 0.03, 0.8, 2.4), "oak")
+bx("tall.sideE", (FX1 - 0.03, 0.2, 0), (FX1, 0.8, 2.4), "oak")
+bx("tall.over", (FX0 + 0.03, 0.2, 1.86), (FX1 - 0.03, 0.8, 2.4), "oak")
+bx("tall.gap", ((FX0 + FX1) / 2 - 0.002, 0.8, 1.88), ((FX0 + FX1) / 2 + 0.002, 0.802, 2.4), "black")
+bx("tall.fill", (FX0, 0.2, 2.4), (FX1, 0.8, H), "paint")
+fa, fb, fm = FX0 + 0.04, FX1 - 0.04, (FX0 + FX1) / 2          # french-door fridge, freezer drawer below
+bx("fridge.body", (fa, 0.22, 0.03), (fb, 0.78, 1.84), "black")
+bx("fridge.doorL", (fa, 0.78, 0.76), (fm - 0.003, 0.84, 1.84), "steel", 0.004)
+bx("fridge.doorR", (fm + 0.003, 0.78, 0.76), (fb, 0.84, 1.84), "steel", 0.004)
+bx("fridge.drawer", (fa, 0.78, 0.05), (fb, 0.84, 0.75), "steel", 0.004)
+bx("fridge.hL", (fm - 0.06, 0.84, 0.95), (fm - 0.04, 0.875, 1.65), "steel", 0.003)
+bx("fridge.hR", (fm + 0.04, 0.84, 0.95), (fm + 0.06, 0.875, 1.65), "steel", 0.003)
+bx("fridge.hD", (fa + 0.12, 0.84, 0.62), (fb - 0.12, 0.875, 0.64), "steel", 0.003)
 bx("run.body", (9.55, 0.2, 0.1), (12.8, 0.78, 0.88), "cabinet")
 bx("run.kick", (9.55, 0.2, 0), (12.8, 0.74, 0.1), "black")
 bx("run.top", (9.55, 0.2, 0.88), (12.8, 0.8, 0.92), "stone", 0.003)
@@ -232,7 +241,6 @@ beam("tap.spout", (10.8, 0.27, 1.25), (10.8, 0.46, 1.25), 0.024, 0.024, M["black
 beam("tap.drop", (10.8, 0.46, 1.25), (10.8, 0.46, 1.19), 0.024, 0.024, M["black"], F)
 bx("board", (11.6, 0.3, 0.92), (11.95, 0.55, 0.94), "oak_flat", 0.003)
 cy("kettle", (12.4, 0.5), 0.08, 0.92, 1.12, "steel", r2=0.06)
-plant("herb", 12.55, 0.38, z=0.92, h=0.32, pot_r=0.06, pot_h=0.12)
 # shelf with cups on the east wall above the run
 bx("shelf", (12.55, 0.3, 1.5), (12.8, 1.9, 1.53), "oak_flat")
 for i in range(5):
@@ -241,10 +249,6 @@ for i, px in enumerate((9.9, 10.685, 11.47)):
     pendant(f"pend_island{i}", px, 2.21, 1.85, r=0.07, watts=8)
 
 # ================================================================== HALL / ENTRY / STAIR
-bx("bench", (2.52, 0.24, 0.38), (3.95, 0.62, 0.44), "oak_flat", 0.006)          # entry bench
-for i, px in enumerate((2.6, 3.87)):
-    bx(f"bench.leg{i}", (px - .02, 0.26, 0), (px + .02, 0.60, 0.38), "black")
-bx("bench.cushion", (2.6, 0.27, 0.44), (3.2, 0.59, 0.5), "throw", 0.02)
 bx("mirror_entry", (3.0, 0.205, 1.0), (3.6, 0.215, 1.9), "mirror"); bx("mirror_entry.fr", (2.98, 0.2, 0.98), (3.62, 0.208, 1.92), "black")
 bx("doormat", (4.2, 0.3, 0), (5.1, 0.85, 0.012), "armchair", 0.004)
 plant("plant_stair", 1.95, 2.0, h=1.9, pot_r=0.24, pot_h=0.5)
@@ -265,22 +269,35 @@ for i, py in enumerate((8.27, 9.11)):
     bx(f"pillow{i}", (0.36, py - 0.33, 0.54), (0.82, py + 0.33, 0.70), "bed", 0.07, seg=4)
     bx(f"pillowb{i}", (0.80, py - 0.25, 0.56), (1.0, py + 0.25, 0.80), "cushion" if i else "throw", 0.07, seg=4,
        rot_z=0)
-for i, py in enumerate((7.42, 9.96)):                                  # bedside tables + lamps
-    bx(f"bedside{i}", (0.22, py - 0.2, 0.18), (0.62, py + 0.2, 0.5), "oak", 0.006)
-    cy(f"bedside{i}.leg", (0.42, py), 0.03, 0, 0.18, "black")
-    cy(f"blamp{i}.base", (0.38, py), 0.05, 0.5, 0.68, "ceramic", r2=0.03)
-    cy(f"blamp{i}.shade", (0.38, py), 0.1, 0.68, 0.84, "outdoor", r2=0.075)
-    ld = bpy.data.lights.new(f"blamp{i}", "POINT"); ld.energy = 4; ld.color = (1, 0.8, 0.6); ld.shadow_soft_size = 0.05
-    ob = bpy.data.objects.new(f"blamp{i}", ld); ob.location = (0.38, py, 0.76); ob["base_watts"] = 4.0
+def bed_light(n, loc):
+    ld = bpy.data.lights.new(n, "POINT"); ld.energy = 4; ld.color = (1, 0.8, 0.6); ld.shadow_soft_size = 0.05
+    ob = bpy.data.objects.new(n, ld); ob.location = loc; ob["base_watts"] = 4.0
     coll("Lights").objects.link(ob)
+# wardrobe side: only 0.6 m between wardrobe and bed, so a slim floating shelf + wall light instead of a table
+bx("bedshelf", (0.2, 7.27, 0.52), (0.42, 7.57, 0.55), "oak", 0.004)
+bx("sconce0.plate", (0.2, 7.38, 1.02), (0.215, 7.46, 1.18), "black")
+beam("sconce0.arm", (0.21, 7.42, 1.1), (0.3, 7.42, 1.1), 0.014, 0.014, M["black"], F)
+cy("sconce0.shade", (0.3, 7.42), 0.05, 1.04, 1.16, "outdoor", r2=0.04)
+bed_light("blamp0", (0.3, 7.42, 1.0))
+# window side: bedside table + lamp
+py = 9.96
+bx("bedside1", (0.22, py - 0.2, 0.18), (0.62, py + 0.2, 0.5), "oak", 0.006)
+cy("bedside1.leg", (0.42, py), 0.03, 0, 0.18, "black")
+cy("blamp1.base", (0.38, py), 0.05, 0.5, 0.68, "ceramic", r2=0.03)
+cy("blamp1.shade", (0.38, py), 0.1, 0.68, 0.84, "outdoor", r2=0.075)
+bed_light("blamp1", (0.38, py, 0.76))
 bx("bed.rug", (1.2, 7.5, 0), (3.5, 9.9, 0.012), "rug", 0.004)
-# built-in wardrobe 2.34 x 0.5, four oak doors facing the room
+# built-in wardrobe 2.34 x 0.5, three oak sliding doors (nothing swings into the 0.6 m gap to the bed)
 bx("robe.carcass", (0.2, 6.71, 0), (2.54, 7.20, 2.4), "cabinet_white")
 bx("robe.fill", (0.2, 6.71, 2.4), (2.54, 7.22, H), "paint")
-for i in range(4):
-    a = 0.2 + i * 0.585
-    bx(f"robe.door{i}", (a + 0.003, 7.20, 0.05), (a + 0.582, 7.22, 2.4), "oak")
-    bx(f"robe.pull{i}", (a + (0.52 if i % 2 == 0 else 0.04), 7.22, 0.95), (a + (0.54 if i % 2 == 0 else 0.06), 7.245, 1.25), "black")
+for i in range(3):
+    a = 0.2 + i * 0.77                                   # 0.80 m panels overlapping 30 mm, middle one on the front track
+    yf = 7.222 if i == 1 else 7.20
+    bx(f"robe.door{i}", (a, yf, 0.06), (a + 0.80, yf + 0.02, 2.39), "oak")
+    for q, px in enumerate((a + 0.04, a + 0.74)):        # recessed finger pulls on both edges
+        bx(f"robe.pull{i}{q}", (px, yf + 0.02, 0.9), (px + 0.02, yf + 0.022, 1.3), "black")
+bx("robe.track_t", (0.2, 7.20, 2.39), (2.54, 7.245, 2.4), "black")
+bx("robe.track_b", (0.2, 7.20, 0.05), (2.54, 7.245, 0.06), "black")
 bx("robe.kick", (0.2, 6.71, 0), (2.54, 7.19, 0.05), "black")
 # sheer curtain across the north window (wavy plane) + track
 def curtain(n, x0, x1, y, z0, z1, waves=14):
@@ -300,7 +317,7 @@ curtain("curtain_bedL", 1.2, 1.95, 10.24, 0.03, 2.62, waves=7)
 curtain("curtain_bedR", 2.9, 3.65, 10.24, 0.03, 2.62, waves=7)
 bx("curtain_track", (1.1, 10.22, 2.62), (3.75, 10.26, 2.64), "black")
 bx("art_bed", (3.775, 8.2, 1.1), (3.795, 9.3, 1.9), "art2"); bx("art_bed.fr", (3.785, 8.17, 1.07), (3.80, 9.33, 1.93), "black")
-plant("plant_bed", 3.4, 9.95, h=1.4)
+plant("plant_bed", 3.58, 9.8, h=0.85, pot_r=0.12, pot_h=0.3, s=0.5)   # small pot in the corner, clear of the sliding door
 
 # ================================================================== BATHROOM
 bx("vanity", (0.21, 5.76, 0.45), (0.70, 6.48, 0.82), "oak", 0.004)               # wall-hung vanity
@@ -357,7 +374,6 @@ for i in range(5):
     blob(f"front_hedge{i}", (0.2 + i * 0.75, -0.55, 0.4), 0.5, "leaf", scale=(1.0, 0.6, 0.9), strength=0.2)
 for i in range(3):
     blob(f"front_shrub{i}", (6.6 + i * 0.55, -0.5, 0.3), 0.38, "leaf2", strength=0.25)
-tree("tree_nw", 1.3, 12.6, h=5.2, r=1.7)
 tree("tree_front", 1.5, -3.2, h=4.6, r=1.5)
 tree("tree_street1", -6.0, -5.9, h=6.5, r=2.2)
 tree("tree_street2", 19.0, -5.9, h=6.0, r=2.0)

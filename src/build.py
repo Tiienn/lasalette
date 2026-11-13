@@ -30,7 +30,8 @@ SOUTH_G = [(0.30, 1.08, 1.2, H), (1.70, 2.48, 1.2, H), (4.08, 6.26, 0, 2.4),
 SOUTH_U = [(0.30, 1.08, H, 4.6), (1.70, 2.48, H, 4.6), (4.6, 6.6, 3.9, 5.3), (9.2, 11.6, 3.9, 5.3)]
 NORTH_G = [(4.0, 7.6, 0, 2.4), (8.57, 12.17, 0, 2.4)]
 NORTH_U = [(4.6, 7.0, 3.6, 5.3), (9.2, 11.6, 3.6, 5.3)]
-BED_WIN = (1.43, 3.38, 0.75, 2.4)
+BED_WIN = (1.43, 3.38, 0, 2.4)         # bedroom: small fixed window + sliding door to the garden (as on the plan)
+BED_FIX = 0.55                         # width of the fixed window at the west end of that opening
 
 # ------------------------------------------------------------------ exterior walls
 for lvl, z0, z1, c in (("g", 0, H, "Arch"), ("u", H, TOP, "Upper")):
@@ -74,6 +75,7 @@ box("floor_store", (2.05, 3.93, -0.15), (2.85, 5.22, 0), LAM)
 box("floor_store_door", (2.12, 5.22, -0.15), (2.82, 5.41, 0), LAM)
 box("floor_bed", (0.2, 6.71, -0.15), (3.8, 10.32, 0), LAM)
 box("floor_bed_door", (2.82, 6.51, -0.15), (3.72, 6.71, 0), LAM)
+box("floor_bed_slider", (1.43, 10.32, -0.15), (3.38, 10.52, 0), LAM)
 box("floor_bath", (0.2, 3.93, -0.15), (1.85, 6.51, 0), M["tile_floor"])
 box("floor_bath_door", (1.85, 5.45, -0.15), (2.05, 6.30, 0), M["tile_floor"])
 box("thresh_N1", (4.0, 5.7, -0.15), (7.6, 5.9, 0), M["frame"])
@@ -101,7 +103,6 @@ window("win_stair1", "x", 0.30, 1.08, 0.1, 1.2, 4.6, M)
 window("win_stair2", "x", 1.70, 2.48, 0.1, 1.2, 4.6, M)
 window("win_slot", "x", 6.81, 7.55, 0.1, 0.9, 2.4, M)
 window("win_kitchen", "x", 9.59, 11.98, 0.1, 1.1, 2.4, M, mullions=[10.785])
-window("win_bed", "x", 1.43, 3.38, Y_WING - 0.1, 0.75, 2.4, M, mullions=[2.405])
 for i, (a, b, s, h) in enumerate(SOUTH_U[2:]):
     window(f"win_up_s{i}", "x", a, b, 0.1, s, h, M, mullions=[(a + b) / 2], c="Upper")
 for i, (a, b, s, h) in enumerate(NORTH_U):
@@ -118,26 +119,29 @@ box("entry_pull_in", (5.0, 0.15, 0.8), (5.03, 0.18, 1.6), M["brass"])
 box("entry_pull_out", (5.0, 0.02, 0.8), (5.03, 0.05, 1.6), M["brass"])
 
 # terrace sliders: 2 x 3.6 m, four 0.9 m panels each. West set has one panel slid open.
-def slider(name, x0, open_panel=None):
-    y = Y_MAIN - 0.1
+def slider(name, x0, open_panel=None, y=Y_MAIN - 0.1, width=3.6, panels=4):
     fr, g = M["frame"], M["glass"]
-    box(name + ".head", (x0, y - 0.07, 2.34), (x0 + 3.6, y + 0.07, 2.4), fr)
+    pw = (width - 0.1) / panels                      # panel width between the jambs
+    box(name + ".head", (x0, y - 0.07, 2.34), (x0 + width, y + 0.07, 2.4), fr)
     box(name + ".jl", (x0, y - 0.07, 0), (x0 + 0.05, y + 0.07, 2.4), fr)
-    box(name + ".jr", (x0 + 3.55, y - 0.07, 0), (x0 + 3.6, y + 0.07, 2.4), fr)
-    box(name + ".track", (x0, y - 0.07, 0), (x0 + 3.6, y + 0.07, 0.015), fr)
-    for i in range(4):
-        px = x0 + 0.05 + i * 0.875
+    box(name + ".jr", (x0 + width - 0.05, y - 0.07, 0), (x0 + width, y + 0.07, 2.4), fr)
+    box(name + ".track", (x0, y - 0.07, 0), (x0 + width, y + 0.07, 0.015), fr)
+    for i in range(panels):
+        px = x0 + 0.05 + i * pw
         py = y - 0.03 if i % 2 == 0 else y + 0.03
         if i == open_panel:
-            px -= 0.83           # slid behind its neighbour
+            px -= pw - 0.045     # slid behind its neighbour
             py = y - 0.03 if (i - 1) % 2 else y + 0.03
-        for n, lo, hi in (("l", (px, 0.02), (px + 0.045, 2.34)), ("r", (px + 0.83, 0.02), (px + 0.875, 2.34)),
-                          ("t", (px, 2.29), (px + 0.875, 2.34)), ("b", (px, 0.02), (px + 0.875, 0.08))):
+        for n, lo, hi in (("l", (px, 0.02), (px + 0.045, 2.34)), ("r", (px + pw - 0.045, 0.02), (px + pw, 2.34)),
+                          ("t", (px, 2.29), (px + pw, 2.34)), ("b", (px, 0.02), (px + pw, 0.08))):
             box(f"{name}.p{i}{n}", (lo[0], py - 0.02, lo[1]), (hi[0], py + 0.02, hi[1]), fr)
-        box(f"{name}.p{i}g", (px + 0.04, py - 0.004, 0.07), (px + 0.84, py + 0.004, 2.30), g)
+        box(f"{name}.p{i}g", (px + 0.04, py - 0.004, 0.07), (px + pw - 0.035, py + 0.004, 2.30), g)
 
 slider("slide_W", 4.0, open_panel=2)
 slider("slide_E", 8.57)
+# bedroom north wall: small fixed window (west) + two-panel sliding door (east)
+window("win_bed_fix", "x", BED_WIN[0], BED_WIN[0] + BED_FIX, Y_WING - 0.1, 0, 2.4, M)
+slider("slide_bed", BED_WIN[0] + BED_FIX, y=Y_WING - 0.1, width=BED_WIN[1] - BED_WIN[0] - BED_FIX, panels=2)
 
 # ------------------------------------------------------------------ internal doors
 def door(name, hinge, width, angle, axis, mat=None, t=0.04, h=2.08):
@@ -231,6 +235,7 @@ box("terrace_floor", (X_WING, Y_MAIN, -0.3), (12.7, 9.42, -0.02), M["terrace"], 
 pv = M["paver"]
 box("pave_S", (X_WING, 9.42, -0.3), (12.7, PY0, -0.02), pv, S)
 box("pave_W", (X_WING, PY0, -0.3), (PX0, 13.95, -0.02), pv, S)
+box("pave_bed", (1.2, Y_WING, -0.3), (X_WING, 11.6, -0.02), pv, S)      # landing outside the bedroom sliding door
 box("pave_E", (PX1, PY0, -0.3), (12.7, 13.95, -0.02), pv, S)
 box("pave_N", (PX0, PY1, -0.3), (PX1, 13.95, -0.02), pv, S)
 box("pool_floor", (PX0, PY0, -PD - 0.2), (PX1, PY1, -PD), M["pool_tile"], S)
